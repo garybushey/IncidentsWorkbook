@@ -1,0 +1,496 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "## Incidents\n---\n"
+      },
+      "name": "text - 2"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "7bb33435-466e-4959-9892-8b8373109823",
+            "version": "KqlParameterItem/1.0",
+            "name": "TimeRange",
+            "label": "Time Range",
+            "type": 4,
+            "value": {
+              "durationMs": 7776000000
+            },
+            "typeSettings": {
+              "selectableValues": [
+                {
+                  "durationMs": 86400000
+                },
+                {
+                  "durationMs": 172800000
+                },
+                {
+                  "durationMs": 259200000
+                },
+                {
+                  "durationMs": 604800000
+                },
+                {
+                  "durationMs": 1209600000
+                },
+                {
+                  "durationMs": 2419200000
+                },
+                {
+                  "durationMs": 2592000000
+                },
+                {
+                  "durationMs": 5184000000
+                },
+                {
+                  "durationMs": 7776000000
+                }
+              ]
+            },
+            "resourceType": "microsoft.insights/components"
+          },
+          {
+            "id": "e013b115-a560-4df6-aff2-068e615ee00a",
+            "version": "KqlParameterItem/1.0",
+            "name": "Status",
+            "type": 2,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "value": [
+              "New",
+              "Active",
+              "Closed"
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": []
+            },
+            "jsonData": "[\r\n    \"New\",\r\n    \"Active\",\r\n    \"Closed\"\r\n]\r\n",
+            "resourceType": "microsoft.insights/components"
+          },
+          {
+            "id": "f4ff8a0e-a026-4a9a-894e-9705b363423e",
+            "version": "KqlParameterItem/1.0",
+            "name": "Severity",
+            "type": 2,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "value": [
+              "High",
+              "Medium",
+              "Low",
+              "Informational"
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": []
+            },
+            "jsonData": "[\r\n    \"Informational\",\r\n    \"Low\",\r\n    \"Medium\",\r\n    \"High\"\r\n]",
+            "timeContext": {
+              "durationMs": 0
+            },
+            "timeContextFromParameter": "TimeRange",
+            "resourceType": "microsoft.insights/components"
+          }
+        ],
+        "style": "pills",
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components"
+      },
+      "name": "parameters - 4"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "let lastUpdates = SentinelIncidents_CL |  summarize properties_lastModifiedTimeUtc_t = max(properties_lastModifiedTimeUtc_t)  by properties_incidentNumber_d;\r\nlastUpdates | join kind=rightsemi (SentinelIncidents_CL) on properties_lastModifiedTimeUtc_t \r\n| where properties_createdTimeUtc_t {TimeRange:query}\r\n| where properties_status_s in ({Status})\r\n| where properties_severity_s in ({Severity})\r\n| extend last_updated = datetime_diff(\"hour\",now(), properties_lastModifiedTimeUtc_t), assignedTo = iff(isempty(properties_owner_assignedTo_s),\"Unassigned\",properties_owner_assignedTo_s)\r\n| order by properties_incidentNumber_d\r\n| project properties_incidentNumber_d, properties_severity_s, properties_status_s, properties_title_s, properties_createdTimeUtc_t, properties_lastModifiedTimeUtc_t, last_updated, properties_additionalData_alertsCount_d, properties_owner_assignedTo_s, assignedTo, properties_description_s, properties_additionalData_commentsCount_d",
+        "size": 0,
+        "title": "Incident List",
+        "timeContext": {
+          "durationMs": 0
+        },
+        "timeContextFromParameter": "TimeRange",
+        "exportedParameters": [
+          {
+            "fieldName": "properties_incidentNumber_d",
+            "parameterName": "incidentNumber",
+            "parameterType": 1,
+            "defaultValue": "0"
+          },
+          {
+            "fieldName": "properties_description_s",
+            "parameterName": "Description",
+            "parameterType": 1,
+            "defaultValue": " "
+          },
+          {
+            "fieldName": "properties_title_s",
+            "parameterName": "Title",
+            "parameterType": 1,
+            "defaultValue": " "
+          }
+        ],
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "table",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "properties_severity_s",
+              "formatter": 18,
+              "formatOptions": {
+                "thresholdsOptions": "colors",
+                "thresholdsGrid": [
+                  {
+                    "operator": "==",
+                    "thresholdValue": "Informational",
+                    "representation": "gray",
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "==",
+                    "thresholdValue": "Low",
+                    "representation": "yellow",
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "==",
+                    "thresholdValue": "Medium",
+                    "representation": "orange",
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "==",
+                    "thresholdValue": "High",
+                    "representation": "redDark",
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "Default",
+                    "thresholdValue": null,
+                    "representation": "blue",
+                    "text": "{0}{1}"
+                  }
+                ]
+              }
+            },
+            {
+              "columnMatch": "properties_lastModifiedTimeUtc_t",
+              "formatter": 5,
+              "formatOptions": {}
+            },
+            {
+              "columnMatch": "last_updated",
+              "formatter": 8,
+              "formatOptions": {
+                "min": 0,
+                "max": 120,
+                "palette": "greenRed"
+              },
+              "numberFormat": {
+                "unit": 26,
+                "options": {
+                  "style": "decimal",
+                  "useGrouping": false,
+                  "maximumSignificantDigits": 2
+                }
+              }
+            },
+            {
+              "columnMatch": "properties_owner_assignedTo_s",
+              "formatter": 5,
+              "formatOptions": {}
+            },
+            {
+              "columnMatch": "properties_description_s",
+              "formatter": 5,
+              "formatOptions": {}
+            }
+          ],
+          "labelSettings": [
+            {
+              "columnId": "properties_incidentNumber_d",
+              "label": "Incident#"
+            },
+            {
+              "columnId": "properties_severity_s",
+              "label": "Severity"
+            },
+            {
+              "columnId": "properties_status_s",
+              "label": "Status"
+            },
+            {
+              "columnId": "properties_title_s",
+              "label": "Title"
+            },
+            {
+              "columnId": "properties_createdTimeUtc_t",
+              "label": "Created Time"
+            },
+            {
+              "columnId": "properties_lastModifiedTimeUtc_t",
+              "label": "Last Modified Time"
+            },
+            {
+              "columnId": "last_updated",
+              "label": "Last Modified Time"
+            },
+            {
+              "columnId": "properties_additionalData_alertsCount_d",
+              "label": "# of Alerts"
+            },
+            {
+              "columnId": "properties_owner_assignedTo_s",
+              "label": "Assigned To"
+            },
+            {
+              "columnId": "assignedTo",
+              "label": "Assigned To"
+            },
+            {
+              "columnId": "properties_description_s",
+              "label": ""
+            },
+            {
+              "columnId": "properties_additionalData_commentsCount_d",
+              "label": "# of Comments"
+            }
+          ]
+        }
+      },
+      "name": "query - 1"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "### Incident number: {incidentNumber}\r\n\r\n### Title: {Title}\r\n\r\n---\r\n\r\n{Description}"
+      },
+      "name": "text - 3"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SentinelIncidents_CL\r\n| where properties_incidentNumber_d == '{incidentNumber}' \r\n| order by properties_lastModifiedTimeUtc_t \r\n| project properties_incidentNumber_d, properties_severity_s, properties_status_s, properties_title_s, properties_createdTimeUtc_t, properties_lastModifiedTimeUtc_t, properties_additionalData_alertsCount_d, properties_owner_assignedTo_s, properties_description_s, properties_additionalData_commentsCount_d",
+        "size": 4,
+        "title": "Incident History",
+        "timeContext": {
+          "durationMs": 0
+        },
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "properties_title_s",
+              "formatter": 5,
+              "formatOptions": {}
+            },
+            {
+              "columnMatch": "properties_description_s",
+              "formatter": 5,
+              "formatOptions": {}
+            }
+          ],
+          "labelSettings": [
+            {
+              "columnId": "properties_incidentNumber_d",
+              "label": "Incident #"
+            },
+            {
+              "columnId": "properties_severity_s",
+              "label": "Severity"
+            },
+            {
+              "columnId": "properties_status_s",
+              "label": "Status"
+            },
+            {
+              "columnId": "properties_title_s"
+            },
+            {
+              "columnId": "properties_createdTimeUtc_t"
+            },
+            {
+              "columnId": "properties_lastModifiedTimeUtc_t",
+              "label": "Last Modified Time"
+            },
+            {
+              "columnId": "properties_additionalData_alertsCount_d",
+              "label": "# of Alerts"
+            },
+            {
+              "columnId": "properties_owner_assignedTo_s",
+              "label": "Owner Name"
+            },
+            {
+              "columnId": "properties_description_s"
+            },
+            {
+              "columnId": "properties_additionalData_commentsCount_d",
+              "label": "# of Comments"
+            }
+          ]
+        }
+      },
+      "name": "query - 2"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "let lastUpdates = SentinelIncidents_CL |  summarize properties_lastModifiedTimeUtc_t = max(properties_lastModifiedTimeUtc_t)  by properties_incidentNumber_d;\r\nlastUpdates | join kind=rightsemi (SentinelIncidents_CL) on properties_lastModifiedTimeUtc_t \r\n| where properties_createdTimeUtc_t {TimeRange}\r\n| summarize count(properties_severity_s) by properties_severity_s",
+        "size": 0,
+        "title": "Incidents by Severity",
+        "timeContext": {
+          "durationMs": 0
+        },
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "piechart",
+        "chartSettings": {
+          "seriesLabelSettings": [
+            {
+              "seriesName": "Low",
+              "color": "yellow"
+            },
+            {
+              "seriesName": "High",
+              "color": "redDark"
+            },
+            {
+              "seriesName": "Medium",
+              "color": "orange"
+            },
+            {
+              "seriesName": "Informational",
+              "color": "gray"
+            }
+          ],
+          "ySettings": {}
+        }
+      },
+      "customWidth": "33",
+      "name": "query - 6"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "let lastUpdates = SentinelIncidents_CL |  summarize properties_lastModifiedTimeUtc_t = max(properties_lastModifiedTimeUtc_t)  by properties_incidentNumber_d;\r\nlastUpdates | join kind=rightsemi (SentinelIncidents_CL) on properties_lastModifiedTimeUtc_t \r\n| where properties_createdTimeUtc_t {TimeRange}\r\n| summarize count(properties_status_s) by properties_status_s",
+        "size": 0,
+        "title": "Incidents by Status",
+        "timeContext": {
+          "durationMs": 0
+        },
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "piechart",
+        "chartSettings": {
+          "seriesLabelSettings": [
+            {
+              "seriesName": "New",
+              "color": "orange"
+            },
+            {
+              "seriesName": "Active",
+              "color": "green"
+            },
+            {
+              "seriesName": "Closed",
+              "color": "red"
+            }
+          ],
+          "ySettings": {}
+        }
+      },
+      "customWidth": "33",
+      "name": "query - 5"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "let lastUpdates = SentinelIncidents_CL |  summarize properties_lastModifiedTimeUtc_t = max(properties_lastModifiedTimeUtc_t)  by properties_incidentNumber_d;\r\nlastUpdates | join kind=rightsemi (SentinelIncidents_CL) on properties_lastModifiedTimeUtc_t \r\n| where properties_createdTimeUtc_t {TimeRange}\r\n| where properties_status_s == \"Closed\"\r\n| extend fullReason = strcat( properties_classification_s,\" - \", properties_classificationReason_s)\r\n| summarize count(fullReason) by fullReason",
+        "size": 0,
+        "title": "Closed Incidents by Reason",
+        "timeContext": {
+          "durationMs": 0
+        },
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "piechart",
+        "chartSettings": {
+          "seriesLabelSettings": [
+            {
+              "seriesName": "BenignPositive",
+              "label": "Benign Positive",
+              "color": "green"
+            },
+            {
+              "seriesName": "FalsePositive - InaccurateData",
+              "label": "False Positive - Inaccurate Data",
+              "color": "blue"
+            },
+            {
+              "seriesName": "BenignPositive - SuspiciousButExpected",
+              "label": "Benign Positive - Suspicious but expected"
+            },
+            {
+              "seriesName": "FalsePositive - ",
+              "label": "False Positive - No reason given",
+              "color": "purple"
+            },
+            {
+              "seriesName": "TruePositive - SuspiciousActivity",
+              "label": "True Positive  - Suspicious activity",
+              "color": "red"
+            },
+            {
+              "seriesName": "Undetermined - ",
+              "label": "Undetermined",
+              "color": "gray"
+            },
+            {
+              "seriesName": "FalsePositive - IncorrectAlertLogic",
+              "label": "False Positive - Incorrect alert logic",
+              "color": "orange"
+            }
+          ],
+          "ySettings": {}
+        }
+      },
+      "customWidth": "33",
+      "name": "query - 7"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "let lastUpdates = SentinelIncidents_CL |  summarize properties_lastModifiedTimeUtc_t = max(properties_lastModifiedTimeUtc_t)  by properties_incidentNumber_d;\r\nlastUpdates | join kind=rightsemi (SentinelIncidents_CL) on properties_lastModifiedTimeUtc_t \r\n| where properties_createdTimeUtc_t {TimeRange}\r\n| where properties_status_s == \"Closed\"\r\n| project properties_title_s, properties_classification_s, properties_classificationReason_s, properties_classificationComment_s\r\n| order by properties_title_s, properties_classification_s",
+        "size": 0,
+        "title": "Closed Reasons",
+        "timeContext": {
+          "durationMs": 0
+        },
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "query - 8"
+    }
+  ],
+  "fromTemplateId": "sentinel-UserWorkbook",
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
